@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>California Golden Route</title>
+    <meta
+      name="description"
+      content="Winter California trip from SFO to Carmel, Sequoia, and optional Mammoth with weather, route logic, famous places, and warnings."
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            boxShadow: {
+              soft: '0 20px 40px rgba(15, 23, 42, 0.12)'
+            }
+          }
+        }
+      };
+    </script>
+    <style>
+      html { scroll-behavior: smooth; }
+      body {
+        background:
+          radial-gradient(circle at top left, rgba(14,165,233,0.14), transparent 28%),
+          radial-gradient(circle at bottom right, rgba(16,185,129,0.12), transparent 26%),
+          #f8fafc;
+      }
+      .dark body { background: #020817; }
+      .day-btn.active {
+        border-color: rgba(14,165,233,0.6);
+        background: linear-gradient(135deg, rgba(14,165,233,0.12), rgba(16,185,129,0.12));
+      }
+    </style>
+  </head>
+  <body class="min-h-screen text-slate-800 antialiased dark:bg-slate-950 dark:text-slate-100">
+    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <header class="rounded-[28px] border border-slate-200 bg-white/80 shadow-soft backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
+        <div class="flex flex-col gap-6 p-6 lg:p-8">
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-sky-600 dark:text-sky-400">Dec 11–15 • Dublin → California loop</p>
+              <h1 class="mt-2 text-4xl font-black tracking-tight text-slate-900 dark:text-white sm:text-5xl">California Golden Route</h1>
+            </div>
+            <div class="inline-flex items-center gap-3 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300">
+              <span class="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+              Best weather first • coast + giant forest
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/70">
+              <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Trip order</p>
+              <p class="mt-2 text-lg font-bold text-slate-900 dark:text-white">SFO → Carmel → Sequoia → optional Mammoth</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/70">
+              <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Home base</p>
+              <p class="mt-2 text-lg font-bold text-slate-900 dark:text-white">Dublin, California</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/70">
+              <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Optional add-on</p>
+              <p class="mt-2 text-lg font-bold text-slate-900 dark:text-white">Mammoth only if weather stays safe</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="mt-8 grid gap-8 xl:grid-cols-[1.5fr_0.78fr]">
+        <section class="space-y-6">
+          <div class="rounded-[28px] border border-slate-200 bg-white/85 p-4 shadow-soft dark:border-slate-800 dark:bg-slate-900/80 sm:p-5">
+            <div class="mb-4 flex items-center justify-between gap-4">
+              <div>
+                <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-600 dark:text-sky-400">Route map</p>
+                <h2 class="mt-2 text-2xl font-black text-slate-900 dark:text-white">A → B → C → D → E</h2>
+              </div>
+              <button id="themeToggle" type="button" class="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-sky-300 hover:bg-sky-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-sky-600 dark:hover:bg-slate-700">
+                <span id="themeLabel">Light</span>
+              </button>
+            </div>
+
+            <div id="routeMap" class="grid gap-3 md:grid-cols-5"></div>
+
+            <div class="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900/70">
+              <div class="mb-2 flex items-center justify-between gap-3">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">California route overview</p>
+                <span class="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300">Winter-safe pacing</span>
+              </div>
+
+              <svg viewBox="0 0 860 520" class="h-[300px] w-full rounded-xl bg-gradient-to-br from-sky-100/80 via-white to-emerald-50 dark:from-slate-800 dark:via-slate-900 dark:to-slate-950">
+                <defs>
+                  <linearGradient id="routeGlow" x1="0%" x2="100%" y1="0%" y2="0%">
+                    <stop offset="0%" stop-color="#0ea5e9"/>
+                    <stop offset="50%" stop-color="#14b8a6"/>
+                    <stop offset="100%" stop-color="#f59e0b"/>
+                  </linearGradient>
+                </defs>
+
+                <path d="M155 116 L220 90 L255 110 L275 145 L290 180 L337 210 L360 245 L395 275 L420 305 L450 330 L470 350 L500 390 L515 420 L560 450 L610 470 L650 445 L690 430 L720 385 L742 336 L770 290 L748 248 L710 210 L685 178 L650 146 L620 125 L585 102 L548 88 L507 92 L470 97 L445 112 L410 104 L372 118 L335 118 L290 130 L245 118 L210 128 L155 116 Z" fill="rgba(148,163,184,0.18)" stroke="rgba(100,116,139,0.35)" stroke-width="3"/>
+
+                <path d="M 560 118 C 540 150, 470 200, 430 282 S 350 396, 330 440" fill="none" stroke="url(#routeGlow)" stroke-width="7" stroke-linecap="round"/>
+
+                <g>
+                  <circle cx="560" cy="118" r="12" fill="#0ea5e9"/>
+                  <circle cx="430" cy="282" r="12" fill="#14b8a6"/>
+                  <circle cx="330" cy="440" r="12" fill="#f59e0b"/>
+                  <circle cx="250" cy="167" r="10" fill="#3b82f6"/>
+                  <circle cx="720" cy="270" r="10" fill="#f97316"/>
+                </g>
+
+                <g font-size="14" font-weight="700" fill="#0f172a" class="dark:fill-slate-100">
+                  <text x="576" y="112">SFO</text>
+                  <text x="422" y="274">Carmel</text>
+                  <text x="246" y="160">Sequoia</text>
+                  <text x="724" y="264">Mammoth</text>
+                  <text x="296" y="448">Big Sur</text>
+                </g>
+
+                <g font-size="11" fill="#475569" class="dark:fill-slate-300">
+                  <text x="530" y="80">Day 1</text>
+                  <text x="390" y="250">Day 2</text>
+                  <text x="220" y="140">Day 3</text>
+                  <text x="705" y="305">Optional</text>
+                </g>
+              </svg>
+            </div>
+          </div>
+
+          <div class="rounded-[28px] border border-slate-200 bg-white/85 p-4 shadow-soft dark:border-slate-800 dark:bg-slate-900/80 sm:p-5">
+            <div id="dayTabs" class="flex flex-wrap items-center gap-2" aria-label="Trip day selection"></div>
+          </div>
+
+          <div id="dayContent" class="rounded-[28px] border border-slate-200 bg-white/85 p-4 shadow-soft dark:border-slate-800 dark:bg-slate-900/80 sm:p-6"></div>
+        </section>
+
+        <aside class="space-y-6">
+          <div class="rounded-[28px] border border-amber-200 bg-amber-50 p-5 shadow-soft dark:border-amber-900/60 dark:bg-amber-950/25">
+            <div class="flex items-center gap-3">
+              <div class="rounded-xl bg-amber-500/15 p-2 text-xl">⚠️</div>
+              <h2 class="text-lg font-bold text-amber-900 dark:text-amber-200">Prechecks & Red Alerts</h2>
+            </div>
+
+            <div class="mt-4 space-y-3 text-sm leading-6 text-amber-950 dark:text-amber-100">
+              <div class="rounded-2xl border border-amber-300 bg-white/70 p-3 dark:border-amber-800 dark:bg-slate-900/60">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">San Francisco</p>
+                <p class="mt-2">Check bridge-wind conditions, parking availability, and waterfront closures before a Golden Gate walk. Fog and cold gusts can make the city feel much colder than the temperature.</p>
+              </div>
+              <div class="rounded-2xl border border-amber-300 bg-white/70 p-3 dark:border-amber-800 dark:bg-slate-900/60">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">Big Sur / Carmel</p>
+                <p class="mt-2">Fuel up before leaving the city, verify CA-1 closure alerts, and avoid cliffside pull-offs in wet conditions. Coastal roads can look dramatic and still be risky in winter fog or rain.</p>
+              </div>
+              <div class="rounded-2xl border border-amber-300 bg-white/70 p-3 dark:border-amber-800 dark:bg-slate-900/60">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">Sequoia / Kings Canyon</p>
+                <p class="mt-2">Check park alerts, daylight travel windows, and snow conditions. Cold nights, icy patches, and elevation changes make early starts and layered gear essential.</p>
+              </div>
+              <div class="rounded-2xl border border-amber-300 bg-white/70 p-3 dark:border-amber-800 dark:bg-slate-900/60">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">Mammoth (optional)</p>
+                <p class="mt-2">Only go if snow conditions, road status, and chain requirements are favorable. If weather is unstable, skip the detour and keep the trip on a safer route.</p>
+              </div>
+              <div class="rounded-2xl border border-amber-300 bg-white/70 p-3 dark:border-amber-800 dark:bg-slate-900/60">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">Winter law</p>
+                <p class="mt-2">California winter driving rules can require chains or snow tires in Sierra-adjacent routes. Check conditions before each mountain segment and never force a pass when it is closed or icy.</p>
+              </div>
+            </div>
+
+            <div class="mt-4 space-y-3">
+              <a href="https://quickmap.dot.ca.gov/" target="_blank" rel="noreferrer" class="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700 transition hover:border-sky-300 hover:bg-sky-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-sky-600 dark:hover:bg-slate-800">
+                <span>Caltrans QuickMap</span>
+                <span>↗</span>
+              </a>
+              <a href="https://gomuirwoods.com" target="_blank" rel="noreferrer" class="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700 transition hover:border-sky-300 hover:bg-sky-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-sky-600 dark:hover:bg-slate-800">
+                <span>Muir Woods Reservations</span>
+                <span>↗</span>
+              </a>
+              <a href="https://www.parks.ca.gov/" target="_blank" rel="noreferrer" class="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700 transition hover:border-sky-300 hover:bg-sky-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-sky-600 dark:hover:bg-slate-800">
+                <span>California Parks</span>
+                <span>↗</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="rounded-[28px] border border-slate-200 bg-white/80 p-5 shadow-soft dark:border-slate-800 dark:bg-slate-900/80">
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white">Weather + essentials</h2>
+            <ul class="mt-4 space-y-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
+              <li class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/70">
+                <span class="font-semibold text-slate-900 dark:text-white">Weather:</span> Start in SF with cool urban weather, then move to the warmer coast, then head into Sequoia where the nights get much colder and drier.
+              </li>
+              <li class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/70">
+                <span class="font-semibold text-slate-900 dark:text-white">Essentials:</span> Winter jacket, fleece layers, hat, gloves, insulated shoes, reusable water bottle, power bank, snacks, charger, tire chains, and emergency blanket.
+              </li>
+              <li class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/70">
+                <span class="font-semibold text-slate-900 dark:text-white">Red alerts:</span> Winter mountain driving is weather-dependent, so keep daylight-only travel, check chain requirements, and skip any optional high-country detour if roads are icy or closed.
+              </li>
+            </ul>
+          </div>
+
+          <div class="rounded-[28px] border border-slate-200 bg-white/80 p-5 shadow-soft dark:border-slate-800 dark:bg-slate-900/80">
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white">Famous SF places & activities</h2>
+            <ul class="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-300">
+              <li class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800/70">• Golden Gate Bridge walk</li>
+              <li class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800/70">• Chinatown and North Beach</li>
+              <li class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800/70">• Ferry Building Marketplace</li>
+              <li class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800/70">• Lombard Street and Russian Hill</li>
+              <li class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800/70">• Alcatraz or the waterfront loop, if time permits</li>
+            </ul>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <script>
+      const routeStops = [
+        { id: 'A', title: 'San Francisco', detail: 'Golden Gate + city first', weather: 'Cool / breezy', time: 'Day 1', badge: 'Start' },
+        { id: 'B', title: 'Carmel + Big Sur', detail: 'CA-1 coast', weather: 'Mildest weather', time: 'Day 2', badge: 'Coast' },
+        { id: 'C', title: 'Sequoia', detail: 'Giant Forest', weather: 'Cold / crisp', time: 'Day 3', badge: 'Forest' },
+        { id: 'D', title: 'Three Rivers / Kings Canyon', detail: 'High-country base', weather: 'Dry / cold', time: 'Day 4', badge: 'Base' },
+        { id: 'E', title: 'Mammoth (Optional)', detail: 'Only if safe', weather: 'Mountain freeze', time: 'Day 5', badge: 'Bonus' }
+      ];
+
+      const tripDays = [
+        {
+          id: 1,
+          label: 'Day 1',
+          date: 'Fri Dec 11',
+          title: 'San Francisco city start',
+          weather: '🌫️ Cool bay air • 56°F / 45°F',
+          time: 'Best for city walking and flexible arrival rhythm',
+          route: 'A',
+          morning: 'Start the trip in San Francisco. This is the best place to begin because the weather is manageable, and the city is ideal for sightseeing without mountain risk.',
+          afternoon: 'Walk across the Golden Gate Bridge, visit the Ferry Building, and spend time in Chinatown and North Beach. This is the classic SFO loop and the easiest day to settle into the trip.',
+          evening: 'Keep the night relaxed with a warm SF dinner and coffee. This lets everyone recover before the coastal drive begins.',
+          mustSee: ['Golden Gate Bridge', 'Ferry Building Marketplace', 'North Beach', 'Chinatown'],
+          famousPlaces: ['Golden Gate Bridge', 'Alcatraz Island', 'Fisherman’s Wharf', 'Lombard Street', 'Chinatown', 'North Beach', 'Twin Peaks', 'Ferry Building', 'Palace of Fine Arts', 'Coit Tower'],
+          insights: ['Best weather window', 'City landmarks', 'Low-stress start'],
+          accent: 'from-sky-500/15 via-indigo-500/10 to-transparent'
+        },
+        {
+          id: 2,
+          label: 'Day 2',
+          date: 'Sat Dec 12',
+          title: 'Carmel-by-the-Sea & Big Sur',
+          weather: '🌊 Warmer coast • 59°F / 42°F',
+          time: 'Best for ocean views and gentler winter conditions',
+          route: 'A → B',
+          morning: 'Head south from SF to Carmel-by-the-Sea. The coastal weather is milder, which makes this the best day to hit the CA-1 route without the harshest conditions of the mountain sections.',
+          afternoon: 'Walk through Carmel’s storybook lanes, then continue south to Bixby Creek Bridge for one of the best Pacific scenic viewpoints on the entire route.',
+          evening: 'Catch the sunset over the Pacific before a smooth night along the coast. This is the most flexible scenic day and one of the strongest visual payoff moments of the trip.',
+          mustSee: ['Carmel-by-the-Sea', 'Bixby Creek Bridge', 'Pacific sunset overlook'],
+          famousPlaces: ['Bixby Creek Bridge', 'Point Lobos State Natural Reserve', 'Pfeiffer Beach', 'McWay Falls', 'Julia Pfeiffer Burns State Park', 'Carmel Beach', 'Carmel Mission', 'Garrapata State Park', 'Big Sur River', 'Highway 1 scenic pull-offs'],
+          insights: ['Mildest weather', 'Big Sur look', 'Ocean panorama'],
+          accent: 'from-cyan-500/15 via-blue-500/10 to-transparent'
+        },
+        {
+          id: 3,
+          label: 'Day 3',
+          date: 'Sun Dec 13',
+          title: 'Sequoia National Park',
+          weather: '❄️ Cold valley air • 48°F / 30°F',
+          time: 'Best when weather is dry and roads are clear',
+          route: 'B → C',
+          morning: 'Drive inland toward Sequoia while the weather window is still favorable. This is a strong natural stop that gives you giant trees, dramatic views, and calmer pacing than a forced mountain detour.',
+          afternoon: 'Explore Giant Forest, General Sherman, and the big-tree viewpoints. This is the payoff day for towering forests and crisp winter scenery without the extra weather risk of the high Sierra.',
+          evening: 'Stay in the park or nearby and keep the evening simple. The cold is real, so a calm night works better than pushing onward late.',
+          mustSee: ['General Sherman Tree', 'Giant Forest', 'Tunnel Log'],
+          famousPlaces: ['General Sherman Tree', 'Giant Forest', 'Moro Rock', 'Tokopah Falls', 'Crystal Cave', 'Congress Trail', 'Beetle Rock', 'Tunnel Log', 'Alta Peak', 'Big Stump'],
+          insights: ['Best tree payoff', 'Dry winter route', 'Low-stress natural stop'],
+          accent: 'from-emerald-500/15 via-sky-500/10 to-transparent'
+        },
+        {
+          id: 4,
+          label: 'Day 4',
+          date: 'Mon Dec 14',
+          title: 'Three Rivers / Kings Canyon base day',
+          weather: '❄️ Dry and brisk • 50°F / 31°F',
+          time: 'Best for flexibility and a low-pressure recovery day',
+          route: 'C → D',
+          morning: 'Use this day to keep the route flexible. If conditions are good, add a scenic loop or a crisp morning lookout. If weather shifts, stay local and keep it easy and safe.',
+          afternoon: 'This is a buffer day built around weather and flexibility rather than forcing a long drive. It helps the whole trip stay realistic in winter conditions while keeping time for views and rest.',
+          evening: 'Stay nearby and enjoy a calm night. This is the best place to absorb the scenery without overcommitting to a risky mountain push.',
+          mustSee: ['Three Rivers', 'Lookouts', 'Forest roads'],
+          famousPlaces: ['General Grant Tree', 'Grant Grove', 'Kings Canyon Scenic Byway', 'Roaring River Falls', 'Zumwalt Meadow', 'Cedar Grove', 'Mist Falls', 'Hume Lake', 'Buck Rock', 'Indian Basin'],
+          insights: ['Flex day', 'Weather buffer', 'Pacing matters'],
+          accent: 'from-slate-500/15 via-blue-500/10 to-transparent'
+        },
+        {
+          id: 5,
+          label: 'Day 5',
+          date: 'Tue Dec 15',
+          title: 'Optional Mammoth Lakes bonus',
+          weather: '❄️ Mountain freeze • 42°F / 22°F',
+          time: 'Only if weather and road conditions stay safe',
+          route: 'D → E (optional)',
+          morning: 'If the weather is stable and it feels safe to go, Mammoth is a bonus stop worth considering. If not, skip it and keep the day flexible, because the route should never be forced in winter.',
+          afternoon: 'This is the best example of a conditional add-on: scenic, dramatic, but not mandatory. It only works if timing, roads, and views all line up.',
+          evening: 'Return to Dublin or keep the final evening open. The smart move is to prioritize safety and flexibility over forcing a difficult mountain push.',
+          mustSee: ['Mammoth Lakes', 'Mountain lake views', 'Conditional weather window'],
+          famousPlaces: ['Mammoth Mountain', 'Devils Postpile', 'Rainbow Falls', 'Lake Mary', 'Convict Lake', 'Mono Lake', 'June Lake Loop', 'Twin Lakes', 'Hot Creek Geological Site', 'Obsidian Dome'],
+          insights: ['Optional', 'Only if clear', 'Safety-first'],
+          accent: 'from-slate-500/15 via-blue-500/10 to-transparent'
+        }
+      ];
+
+      const routeMapEl = document.getElementById('routeMap');
+      const dayTabsEl = document.getElementById('dayTabs');
+      const dayContentEl = document.getElementById('dayContent');
+      const themeToggle = document.getElementById('themeToggle');
+      const themeLabel = document.getElementById('themeLabel');
+      const root = document.documentElement;
+      let activeIndex = 0;
+
+      function renderMap() {
+        routeMapEl.innerHTML = routeStops.map((stop) => `
+          <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/70">
+            <div class="flex items-center justify-between gap-3">
+              <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-sky-600 text-sm font-black text-white">${stop.id}</span>
+              <span class="rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300">${stop.badge}</span>
+            </div>
+            <h3 class="mt-3 text-base font-bold text-slate-900 dark:text-white">${stop.title}</h3>
+            <p class="text-sm text-slate-600 dark:text-slate-300">${stop.detail}</p>
+            <div class="mt-3 space-y-1 text-xs text-slate-500 dark:text-slate-400">
+              <div>${stop.weather}</div>
+              <div>${stop.time}</div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      function renderTabs() {
+        dayTabsEl.innerHTML = tripDays.map((day, index) => `
+          <button type="button" data-index="${index}" class="day-btn ${index === activeIndex ? 'active' : ''} inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition ${index === activeIndex ? 'border-sky-300 bg-sky-50 text-slate-900 dark:border-sky-700 dark:bg-sky-950/40 dark:text-sky-100' : 'border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-sky-600 dark:hover:text-white'}">
+            <span class="text-xs font-bold">${day.label}</span>
+            <span class="text-xs opacity-75">${day.date}</span>
+          </button>
+        `).join('');
+
+        dayTabsEl.querySelectorAll('.day-btn').forEach((button) => {
+          button.addEventListener('click', () => {
+            activeIndex = Number(button.dataset.index);
+            renderTabs();
+            renderDay();
+          });
+        });
+      }
+
+      function renderDay() {
+        const day = tripDays[activeIndex];
+        dayContentEl.innerHTML = `
+          <div class="overflow-hidden rounded-[24px] border border-slate-200 bg-gradient-to-br ${day.accent} dark:border-slate-700">
+            <div class="p-5 sm:p-6">
+              <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">${day.label}</p>
+                  <h2 class="mt-2 text-3xl font-black tracking-tight text-slate-900 dark:text-white">${day.title}</h2>
+                  <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">${day.date} • ${day.time}</p>
+                </div>
+                <div class="rounded-full border border-slate-200 bg-white/80 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-200">
+                  Route ${day.route}
+                </div>
+              </div>
+
+              <div class="mt-6 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+                <div class="rounded-2xl border border-slate-200 bg-white/80 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+                  <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Weather strategy</p>
+                  <h3 class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">${day.weather}</h3>
+                </div>
+                <div class="rounded-2xl border border-slate-200 bg-slate-100/80 p-4 dark:border-slate-700 dark:bg-slate-800/70">
+                  <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Key insights</p>
+                  <div class="mt-3 flex flex-wrap gap-2">
+                    ${day.insights.map(item => `<span class="rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200">${item}</span>`).join('')}
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-5 grid gap-4 md:grid-cols-3">
+                <article class="rounded-2xl border border-slate-200 bg-white/80 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+                  <div class="mb-3 flex items-center gap-2 text-sky-600 dark:text-sky-400">
+                    <span class="text-xl">🌅</span>
+                    <span class="text-[11px] font-semibold uppercase tracking-[0.18em]">Morning</span>
+                  </div>
+                  <p class="text-sm leading-6 text-slate-700 dark:text-slate-200">${day.morning}</p>
+                </article>
+                <article class="rounded-2xl border border-slate-200 bg-white/80 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+                  <div class="mb-3 flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                    <span class="text-xl">🧭</span>
+                    <span class="text-[11px] font-semibold uppercase tracking-[0.18em]">Afternoon</span>
+                  </div>
+                  <p class="text-sm leading-6 text-slate-700 dark:text-slate-200">${day.afternoon}</p>
+                </article>
+                <article class="rounded-2xl border border-slate-200 bg-white/80 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+                  <div class="mb-3 flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+                    <span class="text-xl">✨</span>
+                    <span class="text-[11px] font-semibold uppercase tracking-[0.18em]">Evening</span>
+                  </div>
+                  <p class="text-sm leading-6 text-slate-700 dark:text-slate-200">${day.evening}</p>
+                </article>
+              </div>
+
+              <div class="mt-5 rounded-2xl border border-slate-200 bg-white/80 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Must-stop places</p>
+                <div class="mt-3 flex flex-wrap gap-2">
+                  ${day.mustSee.map(item => `<span class="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">${item}</span>`).join('')}
+                </div>
+              </div>
+
+              <div class="mt-5 rounded-2xl border border-slate-200 bg-white/80 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Famous places to visit</p>
+                <div class="mt-3 flex flex-wrap gap-2">
+                  ${day.famousPlaces.map(item => `<span class="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1.5 text-xs font-medium text-sky-700 dark:border-sky-800 dark:bg-sky-950/30 dark:text-sky-200">${item}</span>`).join('')}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function syncTheme() {
+        const dark = root.classList.contains('dark');
+        themeLabel.textContent = dark ? 'Dark' : 'Light';
+      }
+
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      root.classList.toggle('dark', prefersDark);
+      themeToggle.addEventListener('click', () => {
+        root.classList.toggle('dark');
+        syncTheme();
+      });
+
+      renderMap();
+      renderTabs();
+      renderDay();
+      syncTheme();
+    </script>
+  </body>
+</html>
